@@ -1,4 +1,28 @@
--- Hutame-new-lib: modified from deividcomsono/Obsidian (MIT). See LICENSE.
+--[[
+Hutame-new-lib
+MIT License
+
+Copyright (c) 2025 deividcomsono
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+]]
 local cloneref = (cloneref or clonereference or function(instance: any)
     return instance
 end)
@@ -30,13 +54,13 @@ local Toggles = {}
 local Options = {}
 local Tooltips = {}
 
-local BaseURL = "https://raw.githubusercontent.com/hutamev2/Hutame-new-lib/main/"
+-- Built-in images use Roblox asset IDs; no repository image files required.
 local CustomImageManager = {}
 local CustomImageManagerAssets = {
     TransparencyTexture = {
         RobloxId = 139785960036434,
         Path = "Hutame-new-lib/assets/TransparencyTexture.png",
-        URL = BaseURL .. "assets/TransparencyTexture.png",
+        URL = nil,
 
         Id = nil,
     },
@@ -44,7 +68,7 @@ local CustomImageManagerAssets = {
     SaturationMap = {
         RobloxId = 4155801252,
         Path = "Hutame-new-lib/assets/SaturationMap.png",
-        URL = BaseURL .. "assets/SaturationMap.png",
+        URL = nil,
 
         Id = nil,
     },
@@ -52,7 +76,7 @@ local CustomImageManagerAssets = {
     LoadingIcon = {
         RobloxId = 97544096941083,
         Path = "Hutame-new-lib/assets/LoadingIcon.png",
-        URL = BaseURL .. "assets/LoadingIcon.png",
+        URL = nil,
 
         Id = nil,
     },
@@ -60,7 +84,7 @@ local CustomImageManagerAssets = {
     CheckIcon = {
         RobloxId = 97682394690683,
         Path = "Hutame-new-lib/assets/CheckIcon.png",
-        URL = BaseURL .. "assets/CheckIcon.png",
+        URL = nil,
 
         Id = nil,
     },
@@ -124,7 +148,7 @@ do
 
         local AssetID = string.format("rbxassetid://%s", AssetData.RobloxId)
 
-        if getcustomasset then
+        if AssetData.URL and getcustomasset then
             local Success, NewID = pcall(getcustomasset, AssetData.Path)
 
             if Success and NewID then
@@ -142,6 +166,10 @@ do
         end
 
         local AssetData = CustomImageManagerAssets[AssetName]
+
+        if not AssetData or not AssetData.URL then
+            return false, "Roblox asset ID only"
+        end
 
         RecursiveCreatePath(AssetData.Path, true)
 

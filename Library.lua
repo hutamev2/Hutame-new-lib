@@ -23,6 +23,49 @@ end
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local Mouse = cloneref(LocalPlayer:GetMouse())
 
+-- Only one Hutame UI instance should exist at a time. Prefer the previous
+-- library's own cleanup path so its connections and callbacks are released.
+local Environment = getgenv()
+local PreviousLibrary = Environment.HutameNewLib
+
+if not PreviousLibrary then
+    local LegacyLibrary = Environment.Library
+    local LegacyScreenGui = typeof(LegacyLibrary) == "table" and LegacyLibrary.ScreenGui or nil
+
+    if typeof(LegacyScreenGui) == "Instance" and LegacyScreenGui.Name == "HutameNewLib" then
+        PreviousLibrary = LegacyLibrary
+    end
+end
+
+if typeof(PreviousLibrary) == "table" and PreviousLibrary.Unloaded ~= true then
+    local PreviousUnload = PreviousLibrary.Unload
+    if typeof(PreviousUnload) == "function" then
+        pcall(PreviousUnload, PreviousLibrary)
+    end
+end
+
+-- Older or interrupted versions may have lost their library reference while
+-- leaving a ScreenGui behind. Remove only Hutame UI-owned instances.
+local function RemoveStaleUI(Parent: Instance?)
+    if not Parent then
+        return
+    end
+
+    for _, Child in Parent:GetChildren() do
+        if Child:IsA("ScreenGui") and (Child.Name == "HutameNewLib" or Child.Name == "HutameNewLibLoading") then
+            Child:Destroy()
+        end
+    end
+end
+
+pcall(RemoveStaleUI, CoreGui)
+pcall(function()
+    RemoveStaleUI(gethui())
+end)
+pcall(function()
+    RemoveStaleUI(LocalPlayer:FindFirstChildOfClass("PlayerGui"))
+end)
+
 local Labels = {}
 local Buttons = {}
 local Toggles = {}
@@ -14676,7 +14719,7 @@ function Library:CreateLoading(LoadingInfo)
 
     --// ScreenGui \\--
     local ScreenGui = New("ScreenGui", {
-        Name = "ObsidianLoading",
+        Name = "HutameNewLibLoading",
         DisplayOrder = 999,
         ResetOnSpawn = false
     })
@@ -15457,8 +15500,15 @@ function Library:Unload()
     Library.KeybindContainer = nil
     Library.KeybindMenu = nil
 
-    getgenv().Library = nil
+    local CurrentEnvironment = getgenv()
+    if CurrentEnvironment.HutameNewLib == Library then
+        CurrentEnvironment.HutameNewLib = nil
+    end
+    if CurrentEnvironment.Library == Library then
+        CurrentEnvironment.Library = nil
+    end
 end
 
-getgenv().Library = Library
+Environment.HutameNewLib = Library
+Environment.Library = Library
 return Library
